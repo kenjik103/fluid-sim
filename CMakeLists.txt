@@ -7,9 +7,6 @@ project(FluidSim VERSION 1.0)
 set(CMAKE_C_COMPILER gcc)
 set(CMAKE_CXX_COMPILER g++)
 
-# generates compile_commands.json
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 # Require C++11 or newer
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -23,3 +20,6 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 
 # Link raylib to the project
 target_link_libraries(${PROJECT_NAME} PRIVATE raylib)
+
+# Extra flags for fun
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Werror -Wconversion -pedantic)
