@@ -1,33 +1,38 @@
 #include "raylib.h"
+#include "fluidbox.h"
 #include <cstddef>
 #include <vector>
 #include <iostream>
 
+#define TESTS
+
 int main(void) {
-  const int screenWidth = 800;
-  const int screenHeight = 450;
+  const int screenWidth = 15;
+  const int screenHeight = 15;
 
   InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
 
   SetTargetFPS(60); // Set our game to run at 60 frames-per-second
-                    //
-
-  std::vector<int> data{1, 2, 3, 4, 5};
-  for (int num : data) {
-    std::cout << num << "\n";
+  
+  #ifdef TESTS
+  FluidBox box = FluidBox(screenWidth, screenHeight, 0.5);
+  box.testAddDensitySource();
+  //box.testAddVelocitySource();
+  //box.printVector(box.getDensityField());
+  //box.printVector(box.getVelocityField());
+  for (int i{}; i<3; ++i){
+    box.testDiffuseDensity();
+    box.printVector(box.getDensityField());
   }
+  #endif
 
   // Main game loop
-  while (!WindowShouldClose()) // Detect window close button or ESC key
+  while (!WindowShouldClose()) // etect window close button or ESC key
   {
-    DrawFPS(GetMouseX(), GetMouseY());
-
     // Draw
     //----------------------------------------------------------------------------------
     BeginDrawing();
     ClearBackground(RAYWHITE);
-
-    DrawText("wawawwaawlkdjflkajdf", 190, 200, 20, LIGHTGRAY);
 
     EndDrawing();
   }
