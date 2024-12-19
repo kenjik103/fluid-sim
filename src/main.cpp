@@ -16,14 +16,12 @@ int main(void) {
   
   #ifdef TESTS
   FluidBox box = FluidBox(screenWidth, screenHeight, 0.5);
-  box.testAddDensitySource();
-  //box.testAddVelocitySource();
+  //box.testAddDensitySource();
+  box.testAddVelocitySource();
+  //box.testDiffuseDensity();
+  box.testDiffuseVelocity();
   //box.printVector(box.getDensityField());
-  //box.printVector(box.getVelocityField());
-  for (int i{}; i<3; ++i){
-    box.testDiffuseDensity();
-    box.printVector(box.getDensityField());
-  }
+  box.printVector(box.getVelocityField());
   #endif
 
   // Main game loop

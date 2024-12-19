@@ -12,7 +12,6 @@ class FluidBox {
 public:
   FluidBox(int screenWidth, int screenHeight, float timestep);
 
-
   void update_density(std::vector<float> &prevDensityField,
                       std::vector<float> &densityField,
                       std::vector<Vector2> &velocityField, float diffusionRate);
@@ -29,13 +28,13 @@ public:
   const std::vector<Vector2> &getPrevVelocityField() {
     return m_prevVelocityField;
   }
-  const std::vector<float> &getDensityField() { return m_prevDensity; }
+  const std::vector<float> &getDensityField() { return m_density; }
   std::vector<float> getPrevDensityField() { return m_prevDensity; }
 
 #ifdef TESTS
   void printVector(const std::vector<float> vector) {
-    for (int i{}; i < m_boxHeight; ++i) {
-      for (int j{}; j < m_boxWidth; ++j) {
+    for (int i{1}; i < m_boxHeight; ++i) {
+      for (int j{1}; j < m_boxWidth; ++j) {
         std::cout << vector[IX(i, j)] << " ";
       }
       std::cout << "\n";
@@ -43,8 +42,8 @@ public:
   }
 
   void printVector(const std::vector<Vector2> vector) {
-    for (int i{}; i < m_boxHeight; ++i) {
-      for (int j{}; j < m_boxWidth; ++j) {
+    for (int i{1}; i < m_boxHeight; ++i) {
+      for (int j{1}; j < m_boxWidth; ++j) {
         std::cout << "(" << (vector[IX(i, j)].x) << "," << (vector[IX(i, j)].y)
                   << ")";
       }
@@ -53,21 +52,20 @@ public:
   }
 
   void testAddDensitySource() {
-    m_prevDensity[(static_cast<size_t>(m_boxWidth * m_boxHeight) - 1)/2] = 100;
+    m_prevDensity[(static_cast<size_t>(m_boxWidth * m_boxHeight) - 1) / 2] =
+        3.f;
     add_source(m_prevDensity, m_density);
-    std::swap(m_prevDensity, m_density);
   }
 
   void testAddVelocitySource() {
-    std::vector<Vector2> source(static_cast<size_t>(m_boxWidth * m_boxHeight));
-    source[0] = Vector2{1, 1};
-    source[static_cast<size_t>(m_boxWidth * m_boxHeight) - 1] = Vector2{2, 2};
-    add_source(source, m_velocityField);
+    m_prevVelocityField[(static_cast<size_t>(m_boxWidth * m_boxHeight) - 1) / 2] =
+        Vector2{2.f,2.f};
+    add_source(m_prevVelocityField, m_velocityField);
   }
 
-  void testDiffuseDensity(){
-    diffuse(m_density, m_prevDensity, 0.05f);
-    std::swap(m_density, m_prevDensity);
+  void testDiffuseDensity() { diffuse(m_density, m_prevDensity, 0.005f); }
+  void testDiffuseVelocity() {
+    diffuse(m_velocityField, m_prevVelocityField, 0.005f);
   }
 #endif
 
