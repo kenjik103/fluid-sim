@@ -12,9 +12,7 @@ class FluidBox {
 public:
   FluidBox(int screenWidth, int screenHeight, float timestep);
 
-  void update_density(std::vector<float> &prevDensityField,
-                      std::vector<float> &densityField,
-                      std::vector<Vector2> &velocityField, float diffusionRate);
+  void update_density(float diffusionRate);
 
   void update_velocity(std::vector<Vector2> &velocityField,
                        std::vector<Vector2> &prevVelocityField,
@@ -33,18 +31,18 @@ public:
 
 #ifdef TESTS
   void printVector(const std::vector<float> vector) {
-    for (int i{1}; i < m_boxHeight; ++i) {
-      for (int j{1}; j < m_boxWidth; ++j) {
-        std::cout << vector[IX(i, j)] << " ";
+    for (int i{1}; i <= m_boxHeight; ++i) {
+      for (int j{1}; j <= m_boxWidth; ++j) {
+        std::cout << vector[IX(j, i)] << " ";
       }
       std::cout << "\n";
     }
   }
 
   void printVector(const std::vector<Vector2> vector) {
-    for (int i{1}; i < m_boxHeight; ++i) {
-      for (int j{1}; j < m_boxWidth; ++j) {
-        std::cout << "(" << (vector[IX(i, j)].x) << "," << (vector[IX(i, j)].y)
+    for (int i{1}; i <= m_boxHeight; ++i) {
+      for (int j{1}; j <= m_boxWidth; ++j) {
+        std::cout << "(" << (vector[IX(j, i)].x) << "," << (vector[IX(j, i)].y)
                   << ")";
       }
       std::cout << "\n";
@@ -52,15 +50,25 @@ public:
   }
 
   void testAddDensitySource() {
-    m_prevDensity[(static_cast<size_t>(m_boxWidth * m_boxHeight) - 1) / 2] =
-        3.f;
-    add_source(m_prevDensity, m_density);
+    // m_prevDensity[IX(1,1)] = 3.f;
+    m_prevDensity[IX(m_boxWidth / 2 + 1, m_boxHeight / 2 + 1)] = 5.f;
+    m_prevDensity[IX(m_boxWidth / 2 , m_boxHeight / 2 )] = 5.f;
+    // m_prevDensity[IX(m_boxWidth, m_boxHeight)] = 3.f;
+    // add_source(m_prevDensity, m_density);
   }
 
   void testAddVelocitySource() {
-    m_prevVelocityField[(static_cast<size_t>(m_boxWidth * m_boxHeight) - 1) / 2] =
-        Vector2{2.f,2.f};
-    add_source(m_prevVelocityField, m_velocityField);
+    m_velocityField[IX(m_boxWidth / 2 + 1, m_boxHeight / 2 + 1)] =
+        Vector2{2, 1};
+    m_velocityField[IX(m_boxWidth / 2 , m_boxHeight / 2 + 1)] =
+        Vector2{2, 1};
+    m_velocityField[IX(m_boxWidth / 2 + 1, m_boxHeight / 2 )] =
+        Vector2{2, 1};
+    m_velocityField[IX(m_boxWidth / 2, m_boxHeight / 2)] =
+        Vector2{2, 1};
+    m_velocityField[IX(m_boxWidth / 2 + 2, m_boxHeight / 2 + 2)] =
+        Vector2{1, 1};
+    // add_source(m_prevVelocityField, m_velocityField);
   }
 
   void testDiffuseDensity() { diffuse(m_density, m_prevDensity, 0.005f); }
