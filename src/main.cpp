@@ -1,39 +1,49 @@
 #include "fluidbox.h"
 #include "raylib.h"
+#include <algorithm>
 #include <cstddef>
-#include <iostream>
+#include <cstdint>
+#include <cmath>
 #include <vector>
 
-#define TESTS
 
 int main(void) {
-  const int screenWidth = 15;
-  const int screenHeight = 15;
+  const int screenWidth = 30;
+  const int screenHeight = 30;
 
   InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
 
   SetTargetFPS(60); // Set our game to run at 60 frames-per-second
 
-#ifdef TESTS
-  FluidBox box = FluidBox(screenWidth, screenHeight, 1);
-  box.testAddDensitySource();
-  box.testAddVelocitySource();
-  // box.testDiffuseDensity();
-  // box.testDiffuseVelocity();
-  box.update_density(0.005f);
-  std::cout << "PREV DENSITY:" << "\n";
-  box.printVector(box.getPrevDensityField());
-  std::cout << "CURRENT DENSITY:" << "\n";
-  box.printVector(box.getDensityField());
-#endif
+  FluidBox fluidBox = FluidBox(screenWidth, screenHeight, 0.001f);
+  Vector2 mousePosition{};
 
   // Main game loop
   while (!WindowShouldClose()) // etect window close button or ESC key
   {
+
+    mousePosition = GetMousePosition();
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
+      fluidBox.add_density(mousePosition, 1.f);
+    }
+
+    fluidBox.update_density(0.005f);
+    fluidBox.printVector(fluidBox.getDensityField());
+
     // Draw
     //----------------------------------------------------------------------------------
     BeginDrawing();
     ClearBackground(RAYWHITE);
+
+    for (int y{}; y < screenHeight; ++y){
+      for (int x{}; x < screenWidth; ++x){
+        float density = fluidBox.getDensityNodeValue(x,y);
+        density = std::clamp(density, 0.f, 255.f);
+        std::uint8_t balls = (std::uint8_t) std::lerp(0.f, 1.f, density);
+        Color color = Color(balls, balls, balls);
+        DrawPixel(x, y, color);
+      }
+    }
 
     EndDrawing();
   }

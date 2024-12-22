@@ -14,20 +14,15 @@ public:
 
   void update_density(float diffusionRate);
 
-  void update_velocity(std::vector<Vector2> &velocityField,
-                       std::vector<Vector2> &prevVelocityField,
-                       float viscocity);
+  void update_velocity(float viscocity);
 
-  const std::vector<float>
-  get_source_from_UI(std::vector<float> prevDensityField,
-                     std::vector<Vector2> prevVelocityField);
+  void add_density(Vector2 position, float amount) {
+    m_prevDensity[IX(static_cast<int>(position.x), static_cast<int>(position.y))] += amount;
+  }
 
   const std::vector<Vector2> &getVelocityField() { return m_velocityField; }
-  const std::vector<Vector2> &getPrevVelocityField() {
-    return m_prevVelocityField;
-  }
   const std::vector<float> &getDensityField() { return m_density; }
-  std::vector<float> getPrevDensityField() { return m_prevDensity; }
+  const float getDensityNodeValue(int x, int y) { return m_density[IX(x, y)]; }
 
 #ifdef TESTS
   void printVector(const std::vector<float> vector) {
@@ -52,7 +47,7 @@ public:
   void testAddDensitySource() {
     // m_prevDensity[IX(1,1)] = 3.f;
     m_prevDensity[IX(m_boxWidth / 2 + 1, m_boxHeight / 2 + 1)] = 5.f;
-    m_prevDensity[IX(m_boxWidth / 2 , m_boxHeight / 2 )] = 5.f;
+    m_prevDensity[IX(m_boxWidth / 2, m_boxHeight / 2)] = 5.f;
     // m_prevDensity[IX(m_boxWidth, m_boxHeight)] = 3.f;
     // add_source(m_prevDensity, m_density);
   }
@@ -60,12 +55,9 @@ public:
   void testAddVelocitySource() {
     m_velocityField[IX(m_boxWidth / 2 + 1, m_boxHeight / 2 + 1)] =
         Vector2{2, 1};
-    m_velocityField[IX(m_boxWidth / 2 , m_boxHeight / 2 + 1)] =
-        Vector2{2, 1};
-    m_velocityField[IX(m_boxWidth / 2 + 1, m_boxHeight / 2 )] =
-        Vector2{2, 1};
-    m_velocityField[IX(m_boxWidth / 2, m_boxHeight / 2)] =
-        Vector2{2, 1};
+    m_velocityField[IX(m_boxWidth / 2, m_boxHeight / 2 + 1)] = Vector2{2, 1};
+    m_velocityField[IX(m_boxWidth / 2 + 1, m_boxHeight / 2)] = Vector2{2, 1};
+    m_velocityField[IX(m_boxWidth / 2, m_boxHeight / 2)] = Vector2{2, 1};
     m_velocityField[IX(m_boxWidth / 2 + 2, m_boxHeight / 2 + 2)] =
         Vector2{1, 1};
     // add_source(m_prevVelocityField, m_velocityField);
@@ -86,6 +78,9 @@ private:
 
   std::vector<float> m_density;
   std::vector<float> m_prevDensity;
+
+  std::vector<float> m_divergence;
+  std::vector<float> m_scalarField;
 
   const float m_timestep;
 
@@ -111,7 +106,9 @@ private:
               std::vector<float> &prevDensityField,
               std::vector<Vector2> &velocityField);
 
-  void clear_divergence(std::vector<Vector2> velocityField,
-                        std::vector<Vector2> prevVelocityField);
+  void clear_divergence(std::vector<Vector2> &velocityField,
+                        std::vector<float> &divergence,
+                        std::vector<float> &scalar);
+  void set_bounds();
 };
 #endif
