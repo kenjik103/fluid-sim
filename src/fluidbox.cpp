@@ -10,36 +10,37 @@
 /**
  * CONSTRUCTOR
  **/
-FluidBox::FluidBox(int screenWidth, int screenHeight, float timestep)
-    : m_boxWidth{screenWidth}, m_boxHeight{screenHeight}, m_timestep{timestep} {
+FluidBox::FluidBox(int screenWidth, int screenHeight, float timestep,
+                   float viscosity, float diffusionRate)
+    : m_boxWidth{screenWidth}, m_boxHeight{screenHeight}, m_timestep{timestep},
+      m_viscosity{viscosity}, m_diffusionRate{diffusionRate} {
   std::size_t size =
       static_cast<std::size_t>((screenWidth + 2) * (screenHeight + 2));
   assert(size > 0);
   m_velocityField = std::vector<Vector2>(size);
   m_prevVelocityField = std::vector<Vector2>(size);
-  m_density = std::vector<float>(size, 0.f);
-  m_prevDensity = std::vector<float>(size, 0.f);
-  m_divergence = std::vector<float>(size, 0.f);
-  m_scalarField = std::vector<float>(size, 0.f);
+  m_density = std::vector<float>(size);
+  m_prevDensity = std::vector<float>(size);
+  m_divergence = std::vector<float>(size);
+  m_scalarField = std::vector<float>(size);
 }
 
 /**
  * PUBLIC METHODS
  *
  * */
-void FluidBox::update_density(float diffusionRate) {
+void FluidBox::update_density() {
   add_source(m_prevDensity, m_density);
   std::swap(m_prevDensity, m_density);
-  diffuse(m_density, m_prevDensity, diffusionRate);
+  diffuse(m_density, m_prevDensity, m_diffusionRate);
   std::swap(m_prevDensity, m_density);
   advect(m_density, m_prevDensity, m_velocityField);
 }
 
-void FluidBox::update_velocity(float viscocity)
-{
+void FluidBox::update_velocity() {
   add_source(m_prevVelocityField, m_velocityField);
   std::swap(m_prevVelocityField, m_velocityField);
-  diffuse(m_velocityField, m_prevVelocityField, viscocity);
+  diffuse(m_velocityField, m_prevVelocityField, m_viscosity);
   clear_divergence(m_velocityField, m_divergence, m_scalarField);
   set_bounds();
   std::swap(m_prevVelocityField, m_velocityField);
@@ -55,22 +56,20 @@ void FluidBox::update_velocity(float viscocity)
 
 void FluidBox::add_source(const std::vector<Vector2> &forceSource,
                           std::vector<Vector2> &targetVelocityField) {
-  size_t size = static_cast<size_t>((m_boxWidth + 2) * (m_boxHeight + 2));
-  assert(size == forceSource.size());
-  assert(size == targetVelocityField.size());
-  for (size_t i{}; i < size; ++i) {
-    targetVelocityField[i].x += forceSource[i].x * m_timestep;
-    targetVelocityField[i].y += forceSource[i].y * m_timestep;
+  for (int i{0}; i <= m_boxHeight + 1; ++i){
+    for (int j{0}; j <= m_boxWidth + 1; ++j){
+      targetVelocityField[IX(j,i)].x += forceSource[IX(j,i)].x * m_timestep;
+      targetVelocityField[IX(j,i)].y += forceSource[IX(j,i)].y * m_timestep;
+    }
   }
 }
 
 void FluidBox::add_source(const std::vector<float> &forceSource,
                           std::vector<float> &targetDensityField) {
-  size_t size = static_cast<size_t>((m_boxWidth + 2) * (m_boxHeight + 2));
-  assert(size == forceSource.size());
-  assert(size == targetDensityField.size());
-  for (size_t i{}; i < size; ++i) {
-    targetDensityField[i] += forceSource[i] * m_timestep;
+  for (int i{0}; i <= m_boxHeight + 1; ++i){
+    for (int j{0}; j <= m_boxWidth + 1; ++j){
+      targetDensityField[IX(j,i)] += forceSource[IX(j,i)] * m_timestep;
+    }
   }
 }
 
@@ -95,6 +94,7 @@ void FluidBox::diffuse(std::vector<Vector2> &source,
                   prevSource[IX(j, i - 1)].y + prevSource[IX(j, i + 1)].y)) /
             (1 + 4 * k);
       }
+      set_bounds();
     }
   }
 }
@@ -102,22 +102,25 @@ void FluidBox::diffuse(std::vector<float> &source,
                        const std::vector<float> &prevSource,
                        const float diffusionRate) {
   float k{m_timestep * diffusionRate *
-          static_cast<float>(m_boxWidth * m_boxHeight)};
+          static_cast<float>(m_boxHeight * m_boxHeight)};
   for (int GSIteration{}; GSIteration < 20;
        ++GSIteration) { // run 20 iterations of Gauss Seidel to solve our system
                         // of equations for density.
     for (int i{1}; i <= m_boxHeight; ++i) {
       for (int j{1}; j <= m_boxWidth; ++j) {
-        source[IX(j, i)] =
+        float diffusionVal =
             (prevSource[IX(j, i)] +
              k * (prevSource[IX(j - 1, i)] + prevSource[IX(j + 1, i)] +
                   prevSource[IX(j, i - 1)] + prevSource[IX(j, i + 1)])) /
             (1 + 4 * k);
+        if (diffusionVal > 0.0001f){ //trying to mitigate floating point error
+          source[IX(j,i)] = diffusionVal;
+        }
       }
     }
   }
-  set_bounds();
 }
+
 void FluidBox::advect(std::vector<float> &densityField,
                       std::vector<float> &prevDensityField,
                       std::vector<Vector2> &velocityField) {
@@ -176,6 +179,7 @@ void FluidBox::advect(std::vector<float> &densityField,
                     fract_y);
     }
   }
+  set_bounds();
 }
 
 void FluidBox::clear_divergence(std::vector<Vector2> &velocityField,
@@ -201,6 +205,7 @@ void FluidBox::clear_divergence(std::vector<Vector2> &velocityField,
                             divergence[IX(j, i)]) /
                            4;
       }
+      set_bounds();
     }
 
     for (int i{1}; i <= m_boxWidth; ++i) {
@@ -214,15 +219,39 @@ void FluidBox::clear_divergence(std::vector<Vector2> &velocityField,
       }
     }
   }
+  set_bounds();
 }
 
-void FluidBox::set_bounds(){
-  for (int i{1}; i <= m_boxHeight; ++i){
-    m_velocityField[IX(0,i)].x = 0;
-    m_velocityField[IX(m_boxWidth,i)].x = 0;
+void FluidBox::set_bounds() {
+  for (int i{1}; i <= m_boxHeight; ++i) {
+    m_velocityField[IX(0, i)].x = -m_velocityField[IX(1, i)].x;
+    m_velocityField[IX(m_boxWidth + 1, i)].x =
+        -m_velocityField[IX(m_boxWidth, i)].x;
   }
-  for (int i{1}; i <= m_boxWidth; ++i){
-    m_velocityField[IX(i,0)].y = 0;
-    m_velocityField[IX(i,m_boxHeight)].y = 0;
+  for (int i{1}; i <= m_boxWidth; ++i) {
+    m_velocityField[IX(i, 0)].y = -m_velocityField[IX(i, 1)].y;
+    m_velocityField[IX(i, m_boxHeight + 1)].y = -m_velocityField[IX(i, 1)].y;
   }
+  m_velocityField[IX(0, 0)].x =
+      0.5f * (m_velocityField[IX(1, 0)].x + m_velocityField[IX(0, 1)].x);
+  m_velocityField[IX(0, 0)].y =
+      0.5f * (m_velocityField[IX(1, 0)].y + m_velocityField[IX(0, 1)].y);
+  m_velocityField[IX(0, m_boxHeight + 1)].x =
+      0.5f * (m_velocityField[IX(1, m_boxHeight + 1)].x +
+              m_velocityField[IX(0, m_boxHeight)].x);
+  m_velocityField[IX(0, m_boxHeight + 1)].y =
+      0.5f * (m_velocityField[IX(1, m_boxHeight + 1)].y +
+              m_velocityField[IX(0, m_boxHeight)].y);
+  m_velocityField[IX(m_boxWidth + 1, 0)].x =
+      0.5f * (m_velocityField[IX(m_boxWidth, 0)].x +
+              m_velocityField[IX(m_boxWidth + 1, 1)].x);
+  m_velocityField[IX(m_boxWidth + 1, 0)].y =
+      0.5f * (m_velocityField[IX(m_boxWidth, 0)].y +
+              m_velocityField[IX(m_boxWidth + 1, 1)].y);
+  m_velocityField[IX(m_boxWidth + 1, m_boxHeight + 1)].x =
+      0.5f * (m_velocityField[IX(m_boxWidth, m_boxHeight + 1)].x +
+              m_velocityField[IX(m_boxWidth + 1, m_boxHeight)].x);
+  m_velocityField[IX(m_boxWidth + 1, m_boxHeight + 1)].y =
+      0.5f * (m_velocityField[IX(m_boxWidth, m_boxHeight + 1)].y +
+              m_velocityField[IX(m_boxWidth + 1, m_boxHeight)].y);
 }

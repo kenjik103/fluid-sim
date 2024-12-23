@@ -2,6 +2,7 @@
 #define FLUIDBOX
 
 #include "raylib.h"
+#include <cassert>
 #include <iostream>
 #include <vector>
 
@@ -10,14 +11,16 @@
 
 class FluidBox {
 public:
-  FluidBox(int screenWidth, int screenHeight, float timestep);
+  FluidBox(int screenWidth, int screenHeight, float timestep, float viscosity,
+           float diffusionRate);
 
-  void update_density(float diffusionRate);
+  void update_density();
 
-  void update_velocity(float viscocity);
+  void update_velocity();
 
-  void add_density(Vector2 position, float amount) {
-    m_prevDensity[IX(static_cast<int>(position.x), static_cast<int>(position.y))] += amount;
+  void add_density(int posX, int posY, float amount) {
+    std::cout << posX << ", " << posY << "\n";
+    m_prevDensity[IX(posX, posY)] += amount;
   }
 
   const std::vector<Vector2> &getVelocityField() { return m_velocityField; }
@@ -25,6 +28,7 @@ public:
   const float getDensityNodeValue(int x, int y) { return m_density[IX(x, y)]; }
 
 #ifdef TESTS
+
   void printVector(const std::vector<float> vector) {
     for (int i{1}; i <= m_boxHeight; ++i) {
       for (int j{1}; j <= m_boxWidth; ++j) {
@@ -83,10 +87,14 @@ private:
   std::vector<float> m_scalarField;
 
   const float m_timestep;
+  const float m_viscosity;
+  const float m_diffusionRate;
 
   // helper converts (x,y) coords into 1D array coords
   size_t IX(const int x, const int y) {
-    return static_cast<size_t>(x + (y * m_boxHeight));
+    int size = x + (y * m_boxHeight);
+    assert(size >= 0);
+    return static_cast<size_t>(size);
   };
 
   // forces will either be added to velocity field(type Vector2), or density
