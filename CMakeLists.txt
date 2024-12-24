@@ -22,4 +22,4 @@ add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} PRIVATE raylib)
 
 # Extra flags for fun
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Werror -Wconversion -pedantic)
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Werror -Wsign-conversion  -pedantic)
