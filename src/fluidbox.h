@@ -14,7 +14,7 @@ public:
 
   void step();
 
-  void render();
+  void render(float fadeSpeed, float dyeBrightness);
 
 private:
   // converts 2D coords into 1D

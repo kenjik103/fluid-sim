@@ -30,6 +30,19 @@ void FluidBox::addVelocity(int x, int y, float ammountX, float ammountY) {
 }
 
 size_t FluidBox::IX(int x, int y) {
+  if (x > m_size - 1){
+    x = m_size - 1;
+  }
+  if (y > m_size - 1){
+    y = m_size - 1;
+  }  
+  if (x < 0){
+    x = 0;
+  }
+  if (y < 0){
+    y = 0;
+  }
+
   return static_cast<size_t>(x + (y * m_size));
 }
 
@@ -48,10 +61,20 @@ void FluidBox::step() {
   advect(0, m_density, m_prevDensity, m_Vx, m_Vy);
 }
 
-void FluidBox::render() {
+void FluidBox::render(float fadeSpeed, float dyeBrightness) {
   for (int y{1}; y < m_size - 1; ++y) {
     for (int x{1}; x < m_size - 1; ++x) {
-      Color c = Color(255.f, 255.f, 255.f, 3 * m_density[IX(x,y)]);
+      float density = m_density[IX(x,y)];
+      //fade
+      if (density > 0.f){
+        m_density[IX(x,y)] -= fadeSpeed;
+      }
+      //clamps
+      float alpha = dyeBrightness * density;
+      if (alpha > 255.f){
+        alpha = 255.f;
+      }
+      Color c = Color(255.f, 255.f, 255.f, alpha);
       DrawRectangle(x * m_scale, y * m_scale, m_scale, m_scale, c);
     }
   }

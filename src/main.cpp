@@ -16,10 +16,13 @@ int main(void) {
   SetTargetFPS(60); // Set our game to run at 60 frames-per-second
 
   // fluidbox configurations:
-  float diffusion{0.2f};
-  float viscosity{0.f};
+  float dyeAmount{100.f};
+  float diffusion{0.01f};
+  float viscosity{0.05f};
   float timestep{0.001f};
-  //float brightnessScalar{5.f};
+  float fadeSpeed{.02f};
+  float dyeBrightness{10.f};
+  float velMultiplier{10.f};
 
   FluidBox fluidBox =
       FluidBox(fluidBoxSize, scale, diffusion, viscosity, timestep);
@@ -38,17 +41,18 @@ int main(void) {
     mouseX = (mouseX < 0) ? 0 : mouseX;
     mouseY = (mouseY > screenHeight) ? screenHeight : mouseY;
     mouseY = (mouseY < 0) ? 0 : mouseY;
-    
-    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
-      fluidBox.addDensity (mouseX, mouseY, 100.f);
-      fluidBox.addVelocity(mouseX, mouseY, mouseDelta.x * 10, mouseDelta.y * 10);
+
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+      fluidBox.addDensity(mouseX, mouseY, dyeAmount);
+      fluidBox.addVelocity(mouseX, mouseY, mouseDelta.x * velMultiplier,
+                           mouseDelta.y * velMultiplier);
     }
 
     fluidBox.step();
 
     // Draw
     BeginDrawing();
-    fluidBox.render();
+    fluidBox.render(fadeSpeed, dyeBrightness);
     ClearBackground(BLACK);
 
     EndDrawing();
