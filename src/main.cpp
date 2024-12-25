@@ -1,53 +1,55 @@
-#include "fluidbox.h"
+#include "fluidBox.h"
 #include "raylib.h"
+
 #include <cstddef>
-#include <vector>
+#include <iostream>
 
 int main(void) {
-  const int screenWidth{1280};
-  const int screenHeight{720};
+  const int fluidBoxSize{64};
+  const int scale{10};
+
+  const int screenWidth{fluidBoxSize * scale};
+  const int screenHeight{fluidBoxSize * scale};
 
   InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
 
   SetTargetFPS(60); // Set our game to run at 60 frames-per-second
 
   // fluidbox configurations:
-  const int nodeSize{8}; // PLEASE make sure this is a nice number
-  const float timestep{0.01f};
-  const float diffusionRate{0.005f};
-  const float viscosity{5.f};
+  float diffusion{0.2f};
+  float viscosity{0.f};
+  float timestep{0.001f};
+  //float brightnessScalar{5.f};
 
-  FluidBox fluidBox = FluidBox(screenWidth / nodeSize, screenHeight / nodeSize,
-                               timestep, viscosity, diffusionRate);
-  Vector2 mousePosition{};
+  FluidBox fluidBox =
+      FluidBox(fluidBoxSize, scale, diffusion, viscosity, timestep);
+  int mouseX{};
+  int mouseY{};
+  Vector2 mouseDelta{};
 
   // Main game loop
   while (!WindowShouldClose()) // etect window close button or ESC key
   {
 
-    mousePosition = GetMousePosition();
-    mousePosition.x /= nodeSize;
-    mousePosition.y /= nodeSize;
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-      fluidBox.add_density(static_cast<int>(mousePosition.x),
-                           static_cast<int>(mousePosition.y), 50.f);
+    mouseX = GetMouseX();
+    mouseY = GetMouseY();
+    mouseDelta = GetMouseDelta();
+    mouseX = (mouseX > screenWidth) ? screenWidth : mouseX;
+    mouseX = (mouseX < 0) ? 0 : mouseX;
+    mouseY = (mouseY > screenHeight) ? screenHeight : mouseY;
+    mouseY = (mouseY < 0) ? 0 : mouseY;
+    
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)){
+      fluidBox.addDensity (mouseX, mouseY, 100.f);
+      fluidBox.addVelocity(mouseX, mouseY, mouseDelta.x * 10, mouseDelta.y * 10);
     }
-    fluidBox.update_velocity();
-    fluidBox.update_density();
-    // fluidBox.printVector(fluidBox.getDensityField());
+
+    fluidBox.step();
 
     // Draw
-    //----------------------------------------------------------------------------------
     BeginDrawing();
-    for (int y{}; y < screenHeight / nodeSize; y++) {
-      for (int x{}; x < screenWidth / nodeSize; x++) {
-        float density = fluidBox.getDensityNodeValue(x, y);
-        if (density != 0) {
-          DrawRectangle(x * nodeSize, y * nodeSize, nodeSize, nodeSize, BLACK);
-        }
-      }
-    }
-    ClearBackground(RAYWHITE);
+    fluidBox.render();
+    ClearBackground(BLACK);
 
     EndDrawing();
   }
