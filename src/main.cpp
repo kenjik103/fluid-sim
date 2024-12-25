@@ -5,8 +5,8 @@
 #include <iostream>
 
 int main(void) {
-  const int fluidBoxSize{64};
-  const int scale{10};
+  const int fluidBoxSize{128};
+  const int scale{5};
 
   const int screenWidth{fluidBoxSize * scale};
   const int screenHeight{fluidBoxSize * scale};
@@ -16,13 +16,13 @@ int main(void) {
   SetTargetFPS(60); // Set our game to run at 60 frames-per-second
 
   // fluidbox configurations:
-  float dyeAmount{100.f};
+  float dyeAmount{200.f};
   float diffusion{0.01f};
-  float viscosity{0.05f};
+  float viscosity{0.01f};
   float timestep{0.001f};
-  float fadeSpeed{.02f};
+  float fadeSpeed{.05f};
   float dyeBrightness{10.f};
-  float velMultiplier{10.f};
+  float velMultiplier{70.f};
 
   FluidBox fluidBox =
       FluidBox(fluidBoxSize, scale, diffusion, viscosity, timestep);
@@ -52,9 +52,9 @@ int main(void) {
 
     // Draw
     BeginDrawing();
-    fluidBox.render(fadeSpeed, dyeBrightness);
     ClearBackground(BLACK);
 
+    fluidBox.render(fadeSpeed, dyeBrightness);
     EndDrawing();
   }
 

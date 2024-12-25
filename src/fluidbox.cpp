@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <iostream>
 #include <vector>
 
 FluidBox::FluidBox(int size, int scale, float diffusion, float viscosity,
@@ -11,6 +12,7 @@ FluidBox::FluidBox(int size, int scale, float diffusion, float viscosity,
       m_diffusion{diffusion}, m_viscosity{viscosity} {
   assert(size > 0);
   size_t N{static_cast<size_t>(size)};
+  std::cout << m_scale << "\n";
   m_density = std::vector<float>(N * N);
   m_prevDensity = std::vector<float>(N * N);
 
@@ -80,7 +82,6 @@ void FluidBox::render(float fadeSpeed, float dyeBrightness) {
   }
 }
 
-// TODO: get rid of the wierd b bounds detection thingy
 // b==2 top and bottom
 // b==1 left and right
 void FluidBox::set_bnd(int b, std::vector<float> &x) {
