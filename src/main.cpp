@@ -1,4 +1,4 @@
-#include "fluidBox.h"
+#include "fluidbox.h"
 #include "raylib.h"
 
 #include <cstddef>
